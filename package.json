@@ -1,0 +1,21 @@
+{
+  "name": "qruta-server",
+  "version": "4.0.0",
+  "description": "Servidor backend para Q'ruta",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "pm2": "sudo pm2 start index.js"
+  },
+  "author": "lui2mi",
+  "license": "ISC",
+  "dependencies": {
+    "@sentry/node": "^6.12.0",
+    "dotenv": "^16.0.3",
+    "express": "^4.17.1",
+    "jsts": "2.7.1",
+    "parse-server": "^3.9.0",
+    "qruta-calcular": "^1.0.2",
+    "request": "^2.88.0"
+  }
+}
