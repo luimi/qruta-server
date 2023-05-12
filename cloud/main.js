@@ -3,6 +3,7 @@ const setup = require('./setup');
 const utils = require('./utils');
 const calculate = require('qruta-calcular');
 const nearRoutes = require('./nearRoutes');
+const Sentry = require("@sentry/node");
 const {MODE} = process.env;
 let data;
 let config = {
@@ -28,7 +29,9 @@ isInstalled = async () => {
   try {
     let admin = await new Parse.Query(Parse.Role).equalTo("name", "admin").first();
     return admin !== undefined;
-  } catch (e) { }
+  } catch (e) { 
+    Sentry.captureException(e)
+  }
   return false;
 }
 init = async () => {
