@@ -13,6 +13,9 @@ let config = {
   proportion: 10,
   walkingDistance: 200
 };
+let status = {
+  data:false
+}
 loadData = async () => {
   console.log("Iniciando carga de datos");
   const time = new Date();
@@ -22,7 +25,9 @@ loadData = async () => {
   const routesCount = await new Parse.Query("Route").equalTo('status', true).count();
   const routes = await new Parse.Query("Route").include('company').limit(routesCount).equalTo('status', true).exists('company').find();
   data = await utils.fork('./cloud/loadData.js', { cities: cities, routes: routes, config: config });
-  utils.analytics('server', 'loadData', 'time', new Date() - time);
+  status.data = true;
+  status.time = new Date() - time;
+  utils.analytics('server', 'loadData', 'time', status.time);
   console.log('Datos cargados');
 }
 isInstalled = async () => {
@@ -102,9 +107,8 @@ Parse.Cloud.define("nearRoutes", async (request) => {
   return result;
 });
 
-//TODO intentar agregar uso de cpu y ram
 Parse.Cloud.define("status", async (request) => {
-  return { dataIsLoaded: data !== undefined };
+  return status;
 });
 Parse.Cloud.define("advertise", async (request) => {
   return {
