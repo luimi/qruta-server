@@ -1,7 +1,9 @@
+require('dotenv').config();
 const setup = require('./setup');
 const utils = require('./utils');
 const calculate = require('qruta-calcular');
 const nearRoutes = require('./nearRoutes');
+const {MODE} = process.env;
 let data;
 let config = {
   walkInterval: 500,
@@ -32,12 +34,12 @@ isInstalled = async () => {
 init = async () => {
   console.log("Verificando instalación");
   let result = await isInstalled()
-  if (result) {
-    loadData();
-  } else {
+  if (!result) {
     console.log("Iniciando instalación");
     await setup.install();
-    loadData();
+  }
+  if(!MODE || MODE === 'full'){
+    loadData()
   }
 }
 init();
