@@ -1,5 +1,4 @@
 require('dotenv').config();
-var http = require('http');
 var https = require('https');
 var fs = require('fs');
 var express = require('express');
@@ -21,11 +20,11 @@ var api = new ParseServer({
   masterKey: MASTER_KEY,
   serverURL: SERVER_URL
 });
+api.start();
 
-app.use('/parse', api);
+app.use('/parse', api.app);
 
-var httpServer = http.createServer(app);
-httpServer.listen(PORT, () => {
+app.listen(PORT, () => {
   console.log('Servidor iniciado para http');
 });
 
