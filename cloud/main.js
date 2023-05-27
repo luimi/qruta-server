@@ -4,7 +4,9 @@ const utils = require('./utils');
 const calculate = require('qruta-calcular');
 const nearRoutes = require('./nearRoutes');
 const Sentry = require("@sentry/node");
+const load = require('./load');
 const {MODE} = process.env;
+
 let data;
 let config = {
   walkInterval: 500,
@@ -22,9 +24,11 @@ loadData = async () => {
   const c = await Parse.Config.get();
   config = c.get('serverConfig');
   const cities = await new Parse.Query("City").find();
+  console.log("Ciudades",cities.length);
   const routesCount = await new Parse.Query("Route").equalTo('status', true).count();
-  const routes = await new Parse.Query("Route").include('company').limit(routesCount).equalTo('status', true).exists('company').find();
-  data = await utils.fork('./cloud/loadData.js', { cities: cities, routes: routes, config: config });
+  const routes = await new Parse.Query("Route").include('company','city').limit(routesCount).equalTo('status', true).exists('company').find();
+  console.log("Rutas",routes.length);
+  data = await load(cities,routes,config);
   status.data = true;
   status.time = new Date() - time;
   utils.analytics('server', 'loadData', 'time', status.time);
@@ -47,7 +51,7 @@ init = async () => {
     await setup.install();
   }
   if(!MODE || MODE === 'full'){
-    loadData()
+    Parse.Cloud.startJob("loadData");
   }
 }
 init();
