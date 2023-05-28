@@ -5,6 +5,7 @@ const calculate = require('qruta-calcular');
 const nearRoutes = require('./nearRoutes');
 const Sentry = require("@sentry/node");
 const load = require('./load');
+const redisCtrl = require('./redisController');
 const {MODE} = process.env;
 
 let data;
@@ -78,11 +79,14 @@ Parse.Cloud.define("calculate", async (request) => {
     params.end !== undefined
   ], [1, 2, 3, 4, 5]);
   if (result.success) {
+    let cache = await redisCtrl.getCached(params);
+    if(cache) return cache;
     const time = new Date();
     utils.analytics('calculate', 'start', `${utils.cat(params.start[0])},${utils.cat(params.start[1])}`, 1);
     utils.analytics('calculate', 'end', `${utils.cat(params.end[0])},${utils.cat(params.end[1])}`, 1);
     result = await calculate({ rutas: data[params.city][params.type ? params.type : "urban"], config: config, origen: params.start, destino: params.end, area: params.area, qty: params.qty ? params.qty : 5 });
     utils.analytics('calculate', 'calculate', 'time', new Date() - time);
+    redisCtrl.setCache(params,result);
   }
   return result;
 });
@@ -103,10 +107,13 @@ Parse.Cloud.define("nearRoutes", async (request) => {
     params.area !== undefined
   ], [1, 2, 3, 4]);
   if (result.success) {
+    let cache = await redisCtrl.getCached(params);
+    if(cache) return cache;
     utils.analytics('nearRoutes', 'location', `${utils.cat(params.location[0])},${utils.cat(params.location[1])}`, 1);
     const time = new Date();
     result = await nearRoutes({ data: data, params: params });
     utils.analytics('nearRoutes', 'nearRoutes', 'time', new Date() - time);
+    redisCtrl.setCache(params,result);
   }
   return result;
 });

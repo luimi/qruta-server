@@ -14,6 +14,7 @@
     "dotenv": "^16.0.3",
     "express": "^4.17.1",
     "jsts": "2.7.1",
+    "object-hash": "^3.0.0",
     "parse-server": "^6.2.0",
     "qruta-calcular": "^1.0.2",
     "request": "^2.88.0"
