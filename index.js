@@ -20,21 +20,24 @@ var api = new ParseServer({
   masterKey: MASTER_KEY,
   serverURL: SERVER_URL
 });
-api.start();
 
-app.use('/parse', api.app);
-
-app.listen(PORT, () => {
-  console.log('Servidor iniciado para http');
-});
-
-if (SENTRY_URL)
-  Sentry.init({
-    dsn: SENTRY_URL,
-    tracesSampleRate: 1.0,
+const init = async () => {
+  await api.start();
+  app.use('/parse', api.app);
+  app.listen(PORT, () => {
+    console.log('Servidor iniciado para http');
   });
+  initSentry()
+  initHTTPS()
+}
 
-if (HTTPS_PRIVATEKEY_PATH && HTTPS_FULLCHAIN_PATH) {
+const initSentry = () => {
+  if (SENTRY_URL) Sentry.init({ dsn: SENTRY_URL, tracesSampleRate: 1.0, });
+}
+const initHTTPS = () => {
+  if (!HTTPS_PRIVATEKEY_PATH && !HTTPS_FULLCHAIN_PATH) {
+    return
+  }
   try {
     const httpsServer = https.createServer({
       key: fs.readFileSync(HTTPS_PRIVATEKEY_PATH),
@@ -48,3 +51,5 @@ if (HTTPS_PRIVATEKEY_PATH && HTTPS_FULLCHAIN_PATH) {
     Sentry.captureException(e)
   }
 }
+
+init()
