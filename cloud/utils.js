@@ -160,7 +160,12 @@ module.exports = {
             el: label,
             ev: value,
         };
-        request.post('http://www.google-analytics.com/collect', { form: data });
+        request
+            .post('http://www.google-analytics.com/collect', { form: data })
+            .on('error', () => {
+                console.log("Error","analytics")
+            });
+
     },
     cat: (number) => {
         const parsed = parseFloat(`${number}`);
