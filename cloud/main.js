@@ -17,7 +17,8 @@ let config = {
   walkingDistance: 200
 };
 let status = {
-  data:false
+  data:false,
+  since: new Date().getTime()
 }
 loadData = async () => {
   console.log("Iniciando carga de datos");
@@ -119,7 +120,7 @@ Parse.Cloud.define("nearRoutes", async (request) => {
 });
 
 Parse.Cloud.define("status", async (request) => {
-  return status;
+  return {...status, running: new Date().getTime() - status.since};
 });
 Parse.Cloud.define("advertise", async (request) => {
   return {
