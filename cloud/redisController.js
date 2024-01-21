@@ -9,7 +9,7 @@ module.exports = {
         try {
             await client.connect();
             result = await client.get(hash(params));
-            if(result) result = JSON.parse(result);
+            if (result) result = JSON.parse(result);
             await client.disconnect();
         } catch (e) { }
         return result;
@@ -19,6 +19,13 @@ module.exports = {
         let client = getClient();
         await client.connect();
         await client.set(hash(params), JSON.stringify(result));
+        await client.disconnect();
+    },
+    clearCache: async () => {
+        if (!REDIS_URL) return;
+        let client = getClient();
+        await client.connect();
+        await client.sendCommand(["FLUSHALL"])
         await client.disconnect();
     }
 }

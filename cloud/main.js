@@ -75,6 +75,16 @@ Parse.Cloud.job("loadData", async (request) => {
   }
 
 });
+
+Parse.Cloud.job("clearCache", async (request) => {
+  try {
+    await redisCtrl.clearCache()
+    request.message("Caché borrada")
+  } catch (e) {
+    request.message("Error " + e.message)
+  }
+
+})
 Parse.Cloud.define("calculate", async (request) => {
   /**
    * Error code
