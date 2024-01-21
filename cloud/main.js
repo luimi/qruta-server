@@ -6,7 +6,9 @@ const nearRoutes = require('./nearRoutes');
 const Sentry = require("@sentry/node");
 const load = require('./load');
 const redisCtrl = require('./redisController');
-const {MODE,NAME} = process.env;
+const schedule = require('node-schedule');
+const { MODE, NAME } = process.env;
+
 
 let data;
 let config = {
@@ -17,7 +19,7 @@ let config = {
   walkingDistance: 200
 };
 let status = {
-  data:false,
+  data: false,
   since: new Date().getTime()
 }
 loadData = async () => {
@@ -26,11 +28,11 @@ loadData = async () => {
   const c = await Parse.Config.get();
   config = c.get('serverConfig');
   const cities = await new Parse.Query("City").find();
-  console.log("Ciudades",cities.length);
+  console.log("Ciudades", cities.length);
   const routesCount = await new Parse.Query("Route").equalTo('status', true).count();
-  const routes = await new Parse.Query("Route").include('company','city').limit(routesCount).equalTo('status', true).exists('company').find();
-  console.log("Rutas",routes.length);
-  data = await load(cities,routes,config);
+  const routes = await new Parse.Query("Route").include('company', 'city').limit(routesCount).equalTo('status', true).exists('company').find();
+  console.log("Rutas", routes.length);
+  data = await load(cities, routes, config);
   status.data = true;
   status.time = new Date() - time;
   utils.analytics('server', 'loadData', 'time', status.time);
@@ -40,7 +42,7 @@ isInstalled = async () => {
   try {
     let admin = await new Parse.Query(Parse.Role).equalTo("name", "admin").first();
     return admin !== undefined;
-  } catch (e) { 
+  } catch (e) {
     Sentry.captureException(e)
   }
   return false;
@@ -52,21 +54,26 @@ init = async () => {
     console.log("Iniciando instalación");
     await setup.install();
   }
-  if(!MODE || MODE === 'full'){
+  if (!MODE || MODE === 'full') {
     Parse.Cloud.startJob("loadData");
   }
 }
 init();
+const job = schedule.scheduleJob('0 0 23 * * *', () => {
+  if (!MODE || MODE === 'full') {
+    Parse.Cloud.startJob("loadData");
+  }
+});
 
 Parse.Cloud.job("loadData", async (request) => {
-  if(!MODE || MODE === 'full'){
+  if (!MODE || MODE === 'full') {
     request.message(`${NAME || 'Default'} | 🏃`)
     await loadData();
     request.message(`${NAME || 'Default'} | ✅`);
   } else {
     request.message(`${NAME || 'Default'} | ❌`);
   }
-  
+
 });
 Parse.Cloud.define("calculate", async (request) => {
   /**
@@ -87,13 +94,13 @@ Parse.Cloud.define("calculate", async (request) => {
   ], [1, 2, 3, 4, 5]);
   if (result.success) {
     let cache = await redisCtrl.getCached(params);
-    if(cache) return cache;
+    if (cache) return cache;
     const time = new Date();
     utils.analytics('calculate', 'start', `${utils.cat(params.start[0])},${utils.cat(params.start[1])}`, 1);
     utils.analytics('calculate', 'end', `${utils.cat(params.end[0])},${utils.cat(params.end[1])}`, 1);
     result = await calculate({ rutas: data[params.city][params.type ? params.type : "urban"], config: config, origen: params.start, destino: params.end, area: params.area, qty: params.qty ? params.qty : 5 });
     utils.analytics('calculate', 'calculate', 'time', new Date() - time);
-    redisCtrl.setCache(params,result);
+    redisCtrl.setCache(params, result);
   }
   return result;
 });
@@ -115,18 +122,18 @@ Parse.Cloud.define("nearRoutes", async (request) => {
   ], [1, 2, 3, 4]);
   if (result.success) {
     let cache = await redisCtrl.getCached(params);
-    if(cache) return cache;
+    if (cache) return cache;
     utils.analytics('nearRoutes', 'location', `${utils.cat(params.location[0])},${utils.cat(params.location[1])}`, 1);
     const time = new Date();
     result = await nearRoutes({ data: data, params: params });
     utils.analytics('nearRoutes', 'nearRoutes', 'time', new Date() - time);
-    redisCtrl.setCache(params,result);
+    redisCtrl.setCache(params, result);
   }
   return result;
 });
 
 Parse.Cloud.define("status", async (request) => {
-  return {...status, running: new Date().getTime() - status.since};
+  return { ...status, running: new Date().getTime() - status.since };
 });
 Parse.Cloud.define("advertise", async (request) => {
   return {
