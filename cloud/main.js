@@ -6,7 +6,7 @@ const nearRoutes = require('./nearRoutes');
 const Sentry = require("@sentry/node");
 const load = require('./load');
 const redisCtrl = require('./redisController');
-const {MODE} = process.env;
+const {MODE,NAME} = process.env;
 
 let data;
 let config = {
@@ -59,8 +59,14 @@ init = async () => {
 init();
 
 Parse.Cloud.job("loadData", async (request) => {
-  await loadData();
-  request.message("Data successfully loaded");
+  if(!MODE || MODE === 'full'){
+    request.message(`${NAME || 'Default'} | 🏃`)
+    await loadData();
+    request.message(`${NAME || 'Default'} | ✅`);
+  } else {
+    request.message(`${NAME || 'Default'} | ❌`);
+  }
+  
 });
 Parse.Cloud.define("calculate", async (request) => {
   /**
