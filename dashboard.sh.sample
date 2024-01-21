@@ -1,1 +1,0 @@
-parse-dashboard --dev --appId APPID --masterKey MASTERKEY --serverURL http://localhost:1337/parse --appName qruta

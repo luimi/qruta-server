@@ -4,4 +4,4 @@ log
 .vscode
 .env
 .DS_Store
-dashboard.sh
+dashboard.json
