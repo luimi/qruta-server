@@ -7,7 +7,7 @@ const Sentry = require("@sentry/node");
 const load = require('./load');
 const redisCtrl = require('./redisController');
 const schedule = require('node-schedule');
-const { MODE, NAME } = process.env;
+const { MODE, NAME, SCHEDULE } = process.env;
 
 
 let data;
@@ -59,7 +59,7 @@ init = async () => {
   }
 }
 init();
-const job = schedule.scheduleJob('0 0 23 * * *', () => {
+const job = schedule.scheduleJob(SCHEDULE ? SCHEDULE : '0 0 23 * * *', () => {
   if (!MODE || MODE === 'full') {
     Parse.Cloud.startJob("loadData");
   }
