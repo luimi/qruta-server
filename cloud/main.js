@@ -7,7 +7,8 @@ const Sentry = require("@sentry/node");
 const load = require('./load');
 const redisCtrl = require('./redisController');
 const schedule = require('node-schedule');
-const { MODE, NAME, SCHEDULE } = process.env;
+const os = require("os");
+const { NAME, SCHEDULE, SERVER_URL, CITIES } = process.env;
 
 
 let data;
@@ -21,16 +22,19 @@ let config = {
 let status = {
   data: false,
   since: new Date().getTime()
-}
+};
+let server;
 loadData = async () => {
   console.log("Iniciando carga de datos");
   const time = new Date();
   const c = await Parse.Config.get();
   config = c.get('serverConfig');
-  const cities = await new Parse.Query("City").find();
+  const citiesQuery = new Parse.Query("City")
+  if (CITIES !== "*") citiesQuery.containedIn("objectId", CITIES.split(","))
+  const cities = await citiesQuery.find();
   console.log("Ciudades", cities.length);
-  const routesCount = await new Parse.Query("Route").equalTo('status', true).count();
-  const routes = await new Parse.Query("Route").include('company', 'city').limit(routesCount).equalTo('status', true).exists('company').find();
+  const routesCount = await new Parse.Query("Route").equalTo('status', true).containedIn("city", cities).count();
+  const routes = await new Parse.Query("Route").include('company', 'city').containedIn("city", cities).limit(routesCount).equalTo('status', true).exists('company').find();
   console.log("Rutas", routes.length);
   data = await load(cities, routes, config);
   status.data = true;
@@ -47,6 +51,29 @@ isInstalled = async () => {
   }
   return false;
 }
+getServer = async () => {
+  server = await new Parse.Query("Server").equalTo("name", NAME || "Default").first({ useMasterKey: true });
+  if (!server) {
+    server = new Parse.Object("Server");
+    server.set("name", NAME || "Default");
+    let acl = new Parse.ACL();
+    acl.setPublicReadAccess(false)
+    acl.setPublicWriteAccess(false)
+    server.setACL(acl);
+  }
+  server.set("url", SERVER_URL);
+  server.set("status", "loading")
+  server.set("cities", CITIES ? CITIES.split(",") : []);
+  server.set("memTotal", utils.convertBytes(os.totalmem()))
+  server.set("memFree", utils.convertBytes(os.freemem()))
+  server.set("cores", os.cpus().length)
+  await server.save(null, { useMasterKey: true })
+}
+setServerStatus = async (status) => {
+  server.set("status", status)
+  server.set("memFree", utils.convertBytes(os.freemem()))
+  await server.save(null, { useMasterKey: true });
+}
 init = async () => {
   console.log("Verificando instalación");
   let result = await isInstalled()
@@ -54,16 +81,20 @@ init = async () => {
     console.log("Iniciando instalación");
     await setup.install();
   }
-  if (!MODE || MODE === 'full') {
+  await getServer();
+  if (CITIES) {
     await loadData();
   }
+  await setServerStatus("available");
 }
 
 init();
 
 const job = schedule.scheduleJob(SCHEDULE ? SCHEDULE : '0 0 23 * * *', async () => {
-  if (!MODE || MODE === 'full') {
+  if (CITIES) {
+    await setServerStatus("loading");
     await loadData();
+    await setServerStatus("available");
   }
 });
 
@@ -94,6 +125,7 @@ Parse.Cloud.define("calculate", async (request) => {
     params.end !== undefined
   ], [1, 2, 3, 4, 5]);
   if (result.success) {
+    await await setServerStatus("busy");
     let cache = await redisCtrl.getCached(params);
     if (cache) return cache;
     const time = new Date();
@@ -103,6 +135,7 @@ Parse.Cloud.define("calculate", async (request) => {
     utils.analytics('calculate', 'calculate', 'time', new Date() - time);
     redisCtrl.setCache(params, result);
   }
+  await setServerStatus("available");
   return result;
 });
 Parse.Cloud.define("nearRoutes", async (request) => {
@@ -122,6 +155,7 @@ Parse.Cloud.define("nearRoutes", async (request) => {
     params.area !== undefined
   ], [1, 2, 3, 4]);
   if (result.success) {
+    await setServerStatus("busy");
     let cache = await redisCtrl.getCached(params);
     if (cache) return cache;
     utils.analytics('nearRoutes', 'location', `${utils.cat(params.location[0])},${utils.cat(params.location[1])}`, 1);
@@ -130,6 +164,7 @@ Parse.Cloud.define("nearRoutes", async (request) => {
     utils.analytics('nearRoutes', 'nearRoutes', 'time', new Date() - time);
     redisCtrl.setCache(params, result);
   }
+  await setServerStatus("available");
   return result;
 });
 

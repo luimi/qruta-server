@@ -170,6 +170,20 @@ module.exports = {
     cat: (number) => {
         const parsed = parseFloat(`${number}`);
         return parsed.toFixed(4);
+    },
+    convertBytes: (bytes) => {
+        const gigabyte = 1024 * 1024 * 1024;
+        const megabyte = 1024 * 1024;
+    
+        if (bytes >= gigabyte) {
+            const gigabytes = (bytes / gigabyte).toFixed(2);
+            return gigabytes + ' GB';
+        } else if (bytes >= megabyte) {
+            const megabytes = (bytes / megabyte).toFixed(2);
+            return megabytes + ' MB';
+        } else {
+            return bytes + ' Bytes';
+        }
     }
 }
 
