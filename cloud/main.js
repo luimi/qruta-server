@@ -55,25 +55,16 @@ init = async () => {
     await setup.install();
   }
   if (!MODE || MODE === 'full') {
-    Parse.Cloud.startJob("loadData");
+    await loadData();
   }
 }
+
 init();
-const job = schedule.scheduleJob(SCHEDULE ? SCHEDULE : '0 0 23 * * *', () => {
-  if (!MODE || MODE === 'full') {
-    Parse.Cloud.startJob("loadData");
-  }
-});
 
-Parse.Cloud.job("loadData", async (request) => {
+const job = schedule.scheduleJob(SCHEDULE ? SCHEDULE : '0 0 23 * * *', async () => {
   if (!MODE || MODE === 'full') {
-    request.message(`${NAME || 'Default'} | 🏃`)
     await loadData();
-    request.message(`${NAME || 'Default'} | ✅`);
-  } else {
-    request.message(`${NAME || 'Default'} | ❌`);
   }
-
 });
 
 Parse.Cloud.job("clearCache", async (request) => {
