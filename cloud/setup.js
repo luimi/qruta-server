@@ -30,6 +30,7 @@ module.exports = {
             });
             console.log(`Servidor de Q'ruta instalado correctamente, con el usuario 'admin' y su contraseña: '${password}'`);
         } catch (e) {
+            console.log(`Error instalando: ${e.message}`)
             Sentry.captureException(e)
         }
     }
