@@ -8,6 +8,7 @@ const load = require('./load');
 const redisCtrl = require('./redisController');
 const schedule = require('node-schedule');
 const os = require("os");
+const { version } = require("../package.json");
 const { NAME, SCHEDULE, SERVER_URL, CITIES } = process.env;
 
 
@@ -67,6 +68,8 @@ getServer = async () => {
   server.set("memTotal", utils.convertBytes(os.totalmem()))
   server.set("memFree", utils.convertBytes(os.freemem()))
   server.set("cores", os.cpus().length)
+  server.set("version", version)
+  server.set("node", process.versions.node)
   await server.save(null, { useMasterKey: true })
 }
 setServerStatus = async (status) => {
