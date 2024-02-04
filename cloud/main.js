@@ -174,9 +174,3 @@ Parse.Cloud.define("nearRoutes", async (request) => {
 Parse.Cloud.define("status", async (request) => {
   return { ...status, running: new Date().getTime() - status.since };
 });
-Parse.Cloud.define("advertise", async (request) => {
-  return {
-    picture: 'https://image.winudf.com/v2/image1/Y29tLmx1aTJtaS5xcnV0YV9zY3JlZW5fMF8xNTQ4ODY0OTUxXzA4OA/screen-0.jpg?fakeurl=1&type=.jpg',
-    url: 'https://queruta.com'
-  }
-});
