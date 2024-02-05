@@ -189,9 +189,11 @@ Parse.Cloud.define("getServer", async (request) => {
     city != undefined
   ], [1]);
   if (result.success) {
-    let servers = await new Parse.Query("Server")
+    let queryCity = new Parse.Query("Server").equalTo("cities", city)
+    let queryAny = new Parse.Query("Server").equalTo("cities","*")
+    let servers = await Parse.Query.or(queryCity,queryAny)
       .equalTo("status", "available")
-      .equalTo("cities", city)
+      .notEqualTo("url","http://localhost:1337/parse")
       .find({ useMasterKey: true })
     if (servers.length === 0) {
       result.success = false
@@ -222,7 +224,7 @@ Parse.Cloud.define("getServer", async (request) => {
             break;
           } else {
             servers[i].set("status", "idle")
-            await servers[i].save()
+            await servers[i].save(null,{ useMasterKey: true })
           }
         } else {
           result.url = servers[i].get("url")
