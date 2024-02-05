@@ -184,6 +184,9 @@ module.exports = {
         } else {
             return bytes + ' Bytes';
         }
+    },
+    sleep: (time) => {
+        return new Promise((resolve) => setTimeout(resolve, time));
     }
 }
 

@@ -7,9 +7,10 @@ const Sentry = require("@sentry/node");
 const load = require('./load');
 const redisCtrl = require('./redisController');
 const schedule = require('node-schedule');
+const _request = require('request');
 const os = require("os");
 const { version } = require("../package.json");
-const { NAME, SCHEDULE, SERVER_URL, CITIES } = process.env;
+const { NAME, SCHEDULE, SERVER_URL, CITIES, APP_ID, REST_KEY } = process.env;
 
 
 let data;
@@ -48,6 +49,7 @@ isInstalled = async () => {
     let admin = await new Parse.Query(Parse.Role).equalTo("name", "admin").first();
     return admin !== undefined;
   } catch (e) {
+    console.log("isInstalled: error:", e.message)
     Sentry.captureException(e)
   }
   return false;
@@ -79,6 +81,7 @@ setServerStatus = async (status) => {
 }
 init = async () => {
   console.log("Verificando instalación");
+  await utils.sleep(1000)
   let result = await isInstalled()
   if (!result) {
     console.log("Iniciando instalación");
@@ -174,3 +177,66 @@ Parse.Cloud.define("nearRoutes", async (request) => {
 Parse.Cloud.define("status", async (request) => {
   return { ...status, running: new Date().getTime() - status.since };
 });
+
+Parse.Cloud.define("getServer", async (request) => {
+  /**
+   * Error code
+   * 1. City is missing
+   * 2. No server available
+   */
+  let { city } = request.params
+  let result = await utils.validateArray([
+    city != undefined
+  ], [1]);
+  if (result.success) {
+    let servers = await new Parse.Query("Server")
+      .equalTo("status", "available")
+      .equalTo("cities", city)
+      .find({ useMasterKey: true })
+    if (servers.length === 0) {
+      result.success = false
+      result.codeError = 2
+    } else {
+      let checkServer = (server) => {
+        return new Promise((res, rej) => {
+          let options = {
+            'method': 'POST',
+            'url': `${server.get("url")}/functions/status`,
+            'headers': {
+              'X-Parse-Application-Id': APP_ID,
+              'X-Parse-REST-API-Key': REST_KEY
+            },
+            'timeout': 3000,
+            'json': true
+          };
+          _request(options, (error, response, body) => {
+            if (error) res(false)
+            if (body) res(body.result ? body.result.data : false)
+          });
+        })
+      }
+      for (let i = 0; i < servers.length; i++) {
+        let lastUpdate = new Date().getTime() - servers[i].updatedAt.getTime()
+        if (lastUpdate > (60 * 60 * 1000)) {
+          if (await checkServer(servers[i])) {
+            result.url = servers[i].get("url")
+            break;
+          } else {
+            servers[i].set("status", "idle")
+            await servers[i].save()
+          }
+        } else {
+          result.url = servers[i].get("url")
+          break;
+        }
+      }
+    }
+  } else {
+    return result;
+  }
+  if (!result.url) {
+    result.success = false
+    result.codeError = 2
+  }
+  return result;
+})
