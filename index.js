@@ -22,6 +22,8 @@ var api = new ParseServer({
   masterKeyIps: [MASTER_KEY_IP || '0.0.0.0/0']
 });
 
+app.get('/', (req,res) => res.send({success:true, message:"Q'ruta server is running"}))
+
 const init = async () => {
   await api.start();
   app.use('/parse', api.app);
