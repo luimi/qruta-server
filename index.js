@@ -7,7 +7,7 @@ var Sentry = require("@sentry/node");
 
 
 var app = express();
-const { PORT, DATABASE_URL, APP_ID, MASTER_KEY, SERVER_URL, SENTRY_URL, HTTPS_PRIVATEKEY_PATH, HTTPS_FULLCHAIN_PATH, MASTER_KEY_IP, REST_KEY } = process.env;
+const { PORT, DATABASE_URL, APP_ID, MASTER_KEY, SERVER_URL, SENTRY_URL, HTTPS_PRIVATEKEY_PATH, HTTPS_FULLCHAIN_PATH, MASTER_KEY_IP } = process.env;
 
 if (!PORT || !DATABASE_URL || !APP_ID || !MASTER_KEY || !SERVER_URL) {
   console.log("Configuración incorrecta, verifique las variables de entorno");
@@ -18,7 +18,6 @@ var api = new ParseServer({
   cloud: './cloud/main.js',
   appId: APP_ID,
   masterKey: MASTER_KEY,
-  restAPIKey: REST_KEY,
   serverURL: SERVER_URL,
   masterKeyIps: [MASTER_KEY_IP || '0.0.0.0/0']
 });

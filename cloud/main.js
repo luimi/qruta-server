@@ -10,7 +10,7 @@ const schedule = require('node-schedule');
 const _request = require('request');
 const os = require("os");
 const { version } = require("../package.json");
-const { NAME, SCHEDULE, SERVER_URL, CITIES, APP_ID, REST_KEY } = process.env;
+const { NAME, SCHEDULE, SERVER_URL, CITIES, APP_ID } = process.env;
 
 
 let data;
@@ -203,8 +203,7 @@ Parse.Cloud.define("getServer", async (request) => {
             'method': 'POST',
             'url': `${server.get("url")}/functions/status`,
             'headers': {
-              'X-Parse-Application-Id': APP_ID,
-              'X-Parse-REST-API-Key': REST_KEY
+              'X-Parse-Application-Id': APP_ID
             },
             'timeout': 3000,
             'json': true
