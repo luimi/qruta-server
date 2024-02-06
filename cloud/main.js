@@ -131,9 +131,9 @@ Parse.Cloud.define("calculate", async (request) => {
     params.end !== undefined
   ], [1, 2, 3, 4, 5]);
   if (result.success) {
-    await await setServerStatus("busy");
     let cache = await redisCtrl.getCached(params);
     if (cache) return cache;
+    await await setServerStatus("busy");
     const time = new Date();
     utils.analytics('calculate', 'start', `${utils.cat(params.start[0])},${utils.cat(params.start[1])}`, 1);
     utils.analytics('calculate', 'end', `${utils.cat(params.end[0])},${utils.cat(params.end[1])}`, 1);
