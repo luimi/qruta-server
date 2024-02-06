@@ -188,56 +188,59 @@ Parse.Cloud.define("getServer", async (request) => {
   let result = await utils.validateArray([
     city != undefined
   ], [1]);
-  if (result.success) {
-    let queryCity = new Parse.Query("Server").equalTo("cities", city)
-    let queryAny = new Parse.Query("Server").equalTo("cities","*")
-    let servers = await Parse.Query.or(queryCity,queryAny)
-      .equalTo("status", "available")
-      .notEqualTo("url","http://localhost:1337/parse")
-      .find({ useMasterKey: true })
-    if (servers.length === 0) {
-      result.success = false
-      result.codeError = 2
-    } else {
-      let checkServer = (server) => {
-        return new Promise((res, rej) => {
-          let options = {
-            'method': 'POST',
-            'url': `${server.get("url")}/functions/status`,
-            'headers': {
-              'X-Parse-Application-Id': APP_ID
-            },
-            'timeout': 3000,
-            'json': true
-          };
-          _request(options, (error, response, body) => {
-            if (error) res(false)
-            if (body) res(body.result ? body.result.data : false)
-          });
-        })
-      }
-      for (let i = 0; i < servers.length; i++) {
-        let lastUpdate = new Date().getTime() - servers[i].updatedAt.getTime()
-        if (lastUpdate > (60 * 60 * 1000)) {
-          if (await checkServer(servers[i])) {
-            result.url = servers[i].get("url")
-            break;
-          } else {
-            servers[i].set("status", "idle")
-            await servers[i].save(null,{ useMasterKey: true })
-          }
-        } else {
+  if (!result.success) return result
+  let queries = [
+    new Parse.Query("Server").equalTo("cities", city).equalTo("status", "available"),
+    new Parse.Query("Server").equalTo("cities", "*").equalTo("status", "available"),
+    new Parse.Query("Server").equalTo("cities", city).equalTo("status", "busy"),
+    new Parse.Query("Server").equalTo("cities", "*").equalTo("status", "busy"),
+  ];
+  let checkServer = (server) => {
+    return new Promise((res, rej) => {
+      let options = {
+        'method': 'POST',
+        'url': `${server.get("url")}/functions/status`,
+        'headers': {
+          'X-Parse-Application-Id': APP_ID
+        },
+        'timeout': 3000,
+        'json': true
+      };
+      _request(options, (error, response, body) => {
+        if (error) res(false)
+        if (body) res(body.result ? body.result.data : false)
+      });
+    })
+  }
+  let verifyServers = async (servers) => {
+    let result = { success: false }
+    for (let i = 0; i < servers.length; i++) {
+      let lastUpdate = new Date().getTime() - servers[i].updatedAt.getTime()
+      if (lastUpdate > (60 * 60 * 1000)) {
+        if (await checkServer(servers[i])) {
+          result.success = true
           result.url = servers[i].get("url")
           break;
+        } else {
+          servers[i].set("status", "idle")
+          await servers[i].save(null, { useMasterKey: true })
         }
+      } else {
+        result.success = true
+        result.url = servers[i].get("url")
+        break;
       }
     }
-  } else {
     return result;
   }
-  if (!result.url) {
-    result.success = false
-    result.codeError = 2
+  for (let i = 0; i < queries.length; i++) {
+    let servers = await queries[i]
+      .notEqualTo("url", "http://localhost:1337/parse")
+      .find({ useMasterKey: true })
+    let result = await verifyServers(servers)
+    if (result.success) {
+      return result
+    }
   }
-  return result;
+  return { success: false, errorCode: 2 }
 })
