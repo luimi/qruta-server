@@ -190,10 +190,10 @@ Parse.Cloud.define("getServer", async (request) => {
   ], [1]);
   if (!result.success) return result
   let queries = [
-    new Parse.Query("Server").equalTo("cities", city).equalTo("status", "available"),
-    new Parse.Query("Server").equalTo("cities", "*").equalTo("status", "available"),
-    new Parse.Query("Server").equalTo("cities", city).equalTo("status", "busy"),
-    new Parse.Query("Server").equalTo("cities", "*").equalTo("status", "busy"),
+    { query: new Parse.Query("Server").equalTo("cities", city).equalTo("status", "available"), verify: true },
+    { query: new Parse.Query("Server").equalTo("cities", "*").equalTo("status", "available"), verify: true },
+    { query: new Parse.Query("Server").equalTo("cities", city).equalTo("status", "busy"), verify: false },
+    { query: new Parse.Query("Server").equalTo("cities", "*").equalTo("status", "busy"), verify: false },
   ];
   let checkServer = (server) => {
     return new Promise((res, rej) => {
@@ -207,16 +207,16 @@ Parse.Cloud.define("getServer", async (request) => {
         'json': true
       };
       _request(options, (error, response, body) => {
-        if (error) res(false)
         if (body) res(body.result ? body.result.data : false)
+        else res(false)
       });
     })
   }
-  let verifyServers = async (servers) => {
+  let verifyServers = async (servers, verify) => {
     let result = { success: false }
     for (let i = 0; i < servers.length; i++) {
       let lastUpdate = new Date().getTime() - servers[i].updatedAt.getTime()
-      if (lastUpdate > (60 * 60 * 1000)) {
+      if (verify) {
         if (await checkServer(servers[i])) {
           result.success = true
           result.url = servers[i].get("url")
@@ -234,10 +234,10 @@ Parse.Cloud.define("getServer", async (request) => {
     return result;
   }
   for (let i = 0; i < queries.length; i++) {
-    let servers = await queries[i]
+    let servers = await queries[i].query
       .notEqualTo("url", "http://localhost:1337/parse")
       .find({ useMasterKey: true })
-    let result = await verifyServers(servers)
+    let result = await verifyServers(servers, queries[i].verify)
     if (result.success) {
       return result
     }
