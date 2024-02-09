@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "pm2": "sudo pm2 start index.js",
-    "dashboard": "sh dashboard.sh"
+    "dashboard": "parse-dashboard --config dashboard.json"
   },
   "author": "lui2mi",
   "license": "ISC",
