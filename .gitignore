@@ -6,3 +6,5 @@ log
 .DS_Store
 dashboard.json
 fly.toml
+backup/
+qruta-backup-*
