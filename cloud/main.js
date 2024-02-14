@@ -42,6 +42,7 @@ loadData = async () => {
   status.data = true;
   status.time = new Date() - time;
   utils.analytics('server', 'loadData', 'time', status.time);
+  await server.save({time:status.time},{ useMasterKey: true })
   console.log('Datos cargados');
 }
 isInstalled = async () => {
@@ -74,6 +75,7 @@ getServer = async () => {
   server.set("node", process.versions.node)
   await server.save(null, { useMasterKey: true })
 }
+
 setServerStatus = async (status) => {
   server.set("status", status)
   server.set("memFree", utils.convertBytes(os.freemem()))
@@ -236,6 +238,7 @@ Parse.Cloud.define("getServer", async (request) => {
   for (let i = 0; i < queries.length; i++) {
     let servers = await queries[i].query
       .notEqualTo("url", "http://localhost:1337/parse")
+      .ascending("time")
       .find({ useMasterKey: true })
     let result = await verifyServers(servers, queries[i].verify)
     if (result.success) {
