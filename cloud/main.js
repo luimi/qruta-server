@@ -6,6 +6,7 @@ const nearRoutes = require('./nearRoutes');
 const Sentry = require("@sentry/node");
 const load = require('./load');
 const redisCtrl = require('./redisController');
+const imageCtrl = require('./imageController');
 const schedule = require('node-schedule');
 const _request = require('request');
 const os = require("os");
@@ -42,7 +43,7 @@ loadData = async () => {
   status.data = true;
   status.time = new Date() - time;
   utils.analytics('server', 'loadData', 'time', status.time);
-  await server.save({time:status.time},{ useMasterKey: true })
+  await server.save({ time: status.time }, { useMasterKey: true })
   console.log('Datos cargados');
 }
 isInstalled = async () => {
@@ -247,3 +248,5 @@ Parse.Cloud.define("getServer", async (request) => {
   }
   return { success: false, errorCode: 2 }
 })
+
+Parse.Cloud.define("uploadImage", imageCtrl.upload)
