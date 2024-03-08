@@ -201,7 +201,7 @@ Parse.Cloud.define("getServer", async (request) => {
         'headers': {
           'X-Parse-Application-Id': APP_ID
         },
-        'timeout': 3000,
+        'timeout': 5000,
         'json': true
       };
       _request(options, (error, response, body) => {
