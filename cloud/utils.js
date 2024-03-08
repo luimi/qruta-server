@@ -148,22 +148,26 @@ module.exports = {
         }
         return ans;
     },
-    analytics: (category, action, label, value) => {
-        if (!process.env.GOOGLE_ANALITYCS_ID) return;
-        const data = {
-            v: '1',
-            tid: process.env.GOOGLE_ANALITYCS_ID,
-            cid: '1',
-            t: 'event',
-            ec: category,
-            ea: action,
-            el: label,
-            ev: value,
+    analytics: (type, lat, lon) => {
+        if (!process.env.ANALYTICS_URL || !process.env.ANALYTICS_APPID || !process.env.ANALYTICS_RESTID) return;
+        const options = {
+            url: process.env.ANALYTICS_URL,
+            headers: {
+                'X-Parse-Application-Id': process.env.ANALYTICS_APPID,
+                'X-Parse-REST-API-Key': process.env.ANALYTICS_RESTID,
+                'Content-Type': 'application/json',
+                'Accept': '*/*',
+            },
+            json: {
+                "type": type,
+                "latitude": lat,
+                "longitude": lon
+            }
         };
         request
-            .post('http://www.google-analytics.com/collect', { form: data })
+            .post(options)
             .on('error', () => {
-                console.log("Error","analytics")
+                console.log("Error", "analytics")
             });
 
     },
@@ -174,7 +178,7 @@ module.exports = {
     convertBytes: (bytes) => {
         const gigabyte = 1024 * 1024 * 1024;
         const megabyte = 1024 * 1024;
-    
+
         if (bytes >= gigabyte) {
             const gigabytes = (bytes / gigabyte).toFixed(2);
             return gigabytes + ' GB';

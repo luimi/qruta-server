@@ -42,7 +42,6 @@ loadData = async () => {
   data = await load(cities, routes, config);
   status.data = true;
   status.time = new Date() - time;
-  utils.analytics('server', 'loadData', 'time', status.time);
   await server.save({ time: status.time }, { useMasterKey: true })
   console.log('Datos cargados');
 }
@@ -137,11 +136,9 @@ Parse.Cloud.define("calculate", async (request) => {
     let cache = await redisCtrl.getCached(params);
     if (cache) return cache;
     await await setServerStatus("busy");
-    const time = new Date();
-    utils.analytics('calculate', 'start', `${utils.cat(params.start[0])},${utils.cat(params.start[1])}`, 1);
-    utils.analytics('calculate', 'end', `${utils.cat(params.end[0])},${utils.cat(params.end[1])}`, 1);
+    utils.analytics('start', utils.cat(params.start[0]), utils.cat(params.start[1]));
+    utils.analytics('end', utils.cat(params.end[0]), utils.cat(params.end[1]));
     result = await calculate({ rutas: data[params.city][params.type ? params.type : "urban"], config: config, origen: params.start, destino: params.end, area: params.area, qty: params.qty ? params.qty : 5 });
-    utils.analytics('calculate', 'calculate', 'time', new Date() - time);
     redisCtrl.setCache(params, result);
   }
   await setServerStatus("available");
@@ -167,10 +164,8 @@ Parse.Cloud.define("nearRoutes", async (request) => {
     await setServerStatus("busy");
     let cache = await redisCtrl.getCached(params);
     if (cache) return cache;
-    utils.analytics('nearRoutes', 'location', `${utils.cat(params.location[0])},${utils.cat(params.location[1])}`, 1);
-    const time = new Date();
+    utils.analytics('near', utils.cat(params.location[0]),utils.cat(params.location[1]));
     result = await nearRoutes({ data: data, params: params });
-    utils.analytics('nearRoutes', 'nearRoutes', 'time', new Date() - time);
     redisCtrl.setCache(params, result);
   }
   await setServerStatus("available");
