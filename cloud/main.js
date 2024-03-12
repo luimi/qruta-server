@@ -133,11 +133,11 @@ Parse.Cloud.define("calculate", async (request) => {
     params.end !== undefined
   ], [1, 2, 3, 4, 5]);
   if (result.success) {
+    utils.analytics(params.city, 'start', utils.cat(params.start[0]), utils.cat(params.start[1]));
+    utils.analytics(params.city, 'end', utils.cat(params.end[0]), utils.cat(params.end[1]));
     let cache = await redisCtrl.getCached(params);
     if (cache) return cache;
     await await setServerStatus("busy");
-    utils.analytics('start', utils.cat(params.start[0]), utils.cat(params.start[1]));
-    utils.analytics('end', utils.cat(params.end[0]), utils.cat(params.end[1]));
     result = await calculate({ rutas: data[params.city][params.type ? params.type : "urban"], config: config, origen: params.start, destino: params.end, area: params.area, qty: params.qty ? params.qty : 5 });
     redisCtrl.setCache(params, result);
   }
@@ -162,9 +162,9 @@ Parse.Cloud.define("nearRoutes", async (request) => {
   ], [1, 2, 3, 4]);
   if (result.success) {
     await setServerStatus("busy");
+    utils.analytics(params.city, 'near', utils.cat(params.location[0]),utils.cat(params.location[1]));
     let cache = await redisCtrl.getCached(params);
     if (cache) return cache;
-    utils.analytics('near', utils.cat(params.location[0]),utils.cat(params.location[1]));
     result = await nearRoutes({ data: data, params: params });
     redisCtrl.setCache(params, result);
   }

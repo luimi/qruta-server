@@ -148,17 +148,16 @@ module.exports = {
         }
         return ans;
     },
-    analytics: (type, lat, lon) => {
-        if (!process.env.ANALYTICS_URL || !process.env.ANALYTICS_APPID || !process.env.ANALYTICS_RESTID) return;
+    analytics: (city, type, lat, lon) => {
+        if (!process.env.ANALYTICS_URL) return;
         const options = {
             url: process.env.ANALYTICS_URL,
             headers: {
-                'X-Parse-Application-Id': process.env.ANALYTICS_APPID,
-                'X-Parse-REST-API-Key': process.env.ANALYTICS_RESTID,
                 'Content-Type': 'application/json',
                 'Accept': '*/*',
             },
             json: {
+                "city": city,
                 "type": type,
                 "latitude": lat,
                 "longitude": lon
