@@ -34,7 +34,7 @@ loadData = async () => {
   config = c.get('serverConfig');
   const citiesQuery = new Parse.Query("City")
   if (CITIES !== "*") citiesQuery.containedIn("objectId", CITIES.split(","))
-  const cities = await citiesQuery.find();
+  const cities = await citiesQuery.equalTo("status", true).find();
   console.log("Ciudades", cities.length);
   const routesCount = await new Parse.Query("Route").equalTo('status', true).containedIn("city", cities).count();
   const routes = await new Parse.Query("Route").include('company', 'city').containedIn("city", cities).limit(routesCount).equalTo('status', true).exists('company').find();
