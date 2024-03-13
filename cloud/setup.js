@@ -23,7 +23,9 @@ module.exports = {
             await Parse.Config.save({
                 geocode: [{ type: "arcgis" }],
                 reverse: [{ type: "arcgis" }],
-                walkto: [{ type: "arcgis" }],
+                walkto: [{ type: "osrm" }],
+                places: [{ type: "nominatim"}],
+                serverConfig: {"walkInterval":500,"maxMetersBTWpoints":200,"avgError":0.3,"proportion":10,"walkingDistance":200,"maxPUDO":30,"busSpeed":45},
                 //TODO revisar esto
                 status: { code: utils.randomStr(10), action: 1 },
                 maintenance: true
