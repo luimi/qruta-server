@@ -219,9 +219,6 @@ Parse.Cloud.define("getServer", async (request) => {
           result.success = true
           result.url = servers[i].get("url")
           break;
-        } else {
-          servers[i].set("status", "idle")
-          await servers[i].save(null, { useMasterKey: true })
         }
       } else {
         result.success = true
