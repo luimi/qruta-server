@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "pm2": "sudo pm2 start index.js",
+    "pm2": "sudo pm2 start index.js --name qruta",
     "dashboard": "parse-dashboard --config dashboard.json",
     "backup": "rm -rf backup && source .env && mongodump --uri $DATABASE_URL -o ./backup && zip -r qruta-backup-$(date +'%d%m%Y').zip backup",
     "restore": "source .env && cd backup/* && mongorestore --uri $DATABASE_URL ./ --drop"
