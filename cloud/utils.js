@@ -1,5 +1,7 @@
 const { fork } = require('child_process');
 const request = require('request').defaults({ encoding: null });
+const Sentry = require("@sentry/node");
+
 module.exports = {
     computeDistanceBetween: (from, to) => {
         let radFromLat = toRadians(from[0])
@@ -165,8 +167,11 @@ module.exports = {
         };
         request
             .post(options)
-            .on('error', () => {
-                console.log("Error", "analytics")
+            .on('error', (e) => {
+                if(Sentry.getCurrentHub().getClient()) {
+                    Sentry.captureException(e);
+                    Sentry.captureMessage(`${process.env.NAME}-${e.message}`);
+                }
             });
 
     },
