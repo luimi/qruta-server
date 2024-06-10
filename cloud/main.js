@@ -27,6 +27,7 @@ let status = {
   since: new Date().getTime()
 };
 let server;
+
 loadData = async () => {
   console.log("Iniciando carga de datos");
   const time = new Date();
@@ -75,7 +76,6 @@ getServer = async () => {
   server.set("node", process.versions.node)
   await server.save(null, { useMasterKey: true })
 }
-
 setServerStatus = async (status) => {
   server.set("status", status)
   server.set("memFree", utils.convertBytes(os.freemem()))
@@ -94,17 +94,17 @@ init = async () => {
     await loadData();
   }
   await setServerStatus("available");
+  scheduleJob()
 }
-
+scheduleJob = () => {
+  if(!SCHEDULE) return
+  schedule.scheduleJob(SCHEDULE, async () => {
+    await setServerStatus("idle");
+    process.exit(1)
+  });
+  console.log("Job iniciado")
+}
 init();
-
-const job = schedule.scheduleJob(SCHEDULE ? SCHEDULE : '0 0 23 * * *', async () => {
-  if (CITIES) {
-    await setServerStatus("loading");
-    await loadData();
-    await setServerStatus("available");
-  }
-});
 
 Parse.Cloud.job("clearCache", async (request) => {
   try {
