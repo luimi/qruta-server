@@ -137,7 +137,7 @@ Parse.Cloud.define("calculate", async (request) => {
     utils.analytics(params.city, 'end', utils.cat(params.end[0]), utils.cat(params.end[1]));
     let cache = await redisCtrl.getCached(params);
     if (cache) return cache;
-    await await setServerStatus("busy");
+    await setServerStatus("busy");
     result = await calculate({ rutas: data[params.city][params.type ? params.type : "urban"], config: config, origen: params.start, destino: params.end, area: params.area, qty: params.qty ? params.qty : 5 });
     redisCtrl.setCache(params, result);
   }
