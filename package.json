@@ -1,6 +1,6 @@
 {
   "name": "qruta-server",
-  "version": "4.1.6",
+  "version": "4.1.7",
   "description": "Servidor backend para Q'ruta",
   "main": "index.js",
   "scripts": {
