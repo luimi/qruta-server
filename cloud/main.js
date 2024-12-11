@@ -1,7 +1,7 @@
 require('dotenv').config();
 const setup = require('./setup');
 const utils = require('./utils');
-const calculate = require('qruta-calcular');
+const calculate = require('./calculate');
 const nearRoutes = require('./nearRoutes');
 const Sentry = require("@sentry/node");
 const load = require('./load');

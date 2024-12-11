@@ -1,4 +1,4 @@
-const utils = require('./utils');
+const geoUtils = require('./geoUtils')
 
 module.exports = async ({ data, params }) => {
   let result = await nearRoutes(data, params);
@@ -9,7 +9,7 @@ nearRoutes = async (data, params) => {
   result = { urban: [], massive: [], success: true };
   let near = (array, type) => {
     array.forEach((route) => {
-      if (utils.containsLocation(params.location, route.area[params.area], true)) {
+      if (geoUtils.isNearRoute(route, params.location, params.area * 500)) {
         result[type].push({ id: route.id, name: route.name, details: route.details });
       }
     });
