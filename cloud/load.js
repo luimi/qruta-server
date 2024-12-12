@@ -26,6 +26,7 @@ const loadData = async (_cities, _routes, _config) => {
         route.details = _route.get("details");
         route.company = _route.get("company").get("name");
         route.osisp = _route.get("osisp");
+        route.walkDistance = _route.get("customWalkDistance");
         data[city][isMassive ? "massive" : "urban"].push(route);
     });
     return data;

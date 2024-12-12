@@ -145,10 +145,13 @@ const nivel2 = () => {
 	Object.keys(proceso.pickups).forEach((idRO) => {
 		Object.keys(proceso.dropoffs).forEach((idRD) => {
 			if (idRO != idRD) {
-				let cruzado = cruze(datos.rutas[datos.rutas.findIndex(x => x.id == idRO)].path,
-					datos.rutas[datos.rutas.findIndex(x => x.id == idRD)].path,
+				let iRO = datos.rutas.findIndex(x => x.id == idRO)
+				let iRD = datos.rutas.findIndex(x => x.id == idRD)
+				let cruzado = cruze(datos.rutas[iRO].path,
+					datos.rutas[iRD].path,
 					proceso.pickups[idRO][0],
-					proceso.dropoffs[idRD][proceso.dropoffs[idRD].length - 1]);
+					proceso.dropoffs[idRD][proceso.dropoffs[idRD].length - 1],
+					datos.rutas[iRD].walkDistance);
 				if (cruzado.fin.length > 0 && cruzado.ini.length > 0) {
 					let opciones = recorrerCruze(
 						cruzado,
@@ -156,8 +159,8 @@ const nivel2 = () => {
 						datos.destino,
 						proceso.pickups[idRO],
 						proceso.dropoffs[idRD],
-						datos.rutas[datos.rutas.findIndex(x => x.id == idRO)],
-						datos.rutas[datos.rutas.findIndex(x => x.id == idRD)]
+						datos.rutas[iRO],
+						datos.rutas[iRD]
 					);
 
 					if (opciones.length > 0) {
@@ -181,20 +184,24 @@ const nivel3 = () => {
 	Object.keys(proceso.pickups).forEach(idRO => {
 		datos.rutas.forEach(idR => {
 			if (idRO !== idR.id) {
+				let iRO = datos.rutas.findIndex(x => x.id == idRO)
 				let cruzeInicial = cruze(
-					datos.rutas[datos.rutas.findIndex(x => x.id == idRO)].path,
+					datos.rutas[iRO].path,
 					idR.path,
 					proceso.pickups[idRO][0],
-					idR.path.length - 1);
+					idR.path.length - 1,
+					idR.walkDistance);
 				if (cruzeInicial.fin.length > 0 && cruzeInicial.ini.length > 0)
 					Object.keys(proceso.dropoffs).forEach(idRD => {
 						if (idRD !== idR.id && idRO !== idRD) {
+							let iRD = datos.rutas.findIndex(x => x.id == idRD)
 							//guardar el cruze
 							let cruzeFinal = cruze(
 								idR.path,
-								datos.rutas[datos.rutas.findIndex(x => x.id == idRD)].path,
+								datos.rutas[iRD].path,
 								0,
-								proceso.dropoffs[idRD][proceso.dropoffs[idRD].length - 1]);
+								proceso.dropoffs[idRD][proceso.dropoffs[idRD].length - 1],
+								datos.rutas[iRD].walkDistance);
 							if (cruzeFinal.fin.length > 0 && cruzeFinal.ini.length > 0 &&
 								validarCruzes(cruzeInicial, cruzeFinal)) {
 								let opciones = [];
@@ -202,7 +209,7 @@ const nivel3 = () => {
 									let recorrido1 = recorrer(
 										proceso.pickups[idRO],
 										[cruzeInicial.fin[l]],
-										datos.rutas[datos.rutas.findIndex(x => x.id == idRO)],
+										datos.rutas[iRO],
 										datos.origen, null);
 									for (let m = 0; m < cruzeFinal.fin.length && m < cruzeFinal.ini.length; m++) {
 										if (cruzeInicial.ini[l] < cruzeFinal.fin[m]) {
@@ -216,7 +223,7 @@ const nivel3 = () => {
 											recorrido3 = recorrer(
 												[cruzeFinal.ini[m]],
 												proceso.dropoffs[idRD],
-												datos.rutas[datos.rutas.findIndex(x => x.id == idRD)],
+												datos.rutas[iRD],
 												null, datos.destino);
 											if(recorrido1.length>0 && recorrido2.length>0 && recorrido3.length>0)
 												opciones.push(formarOpcion([recorrido1[0], recorrido2[0], recorrido3[0]]));
@@ -377,7 +384,7 @@ const verificarProceso = () => {
  * @param fin ultimo index de destinos de la ruta2
  * @returns {{fin: Array, ini: Array}}
  */
-const cruze = (ruta1, ruta2, ini, fin) => {
+const cruze = (ruta1, ruta2, ini, fin, walkDistance) => {
 	let m1 = { fin: [], ini: [] };
 	for (let r1i = ini + 1; r1i < ruta1.length; r1i++) {
 		for (let r2i = fin; r2i >= 0; r2i--) {
@@ -386,7 +393,8 @@ const cruze = (ruta1, ruta2, ini, fin) => {
 			if (r2i - 1 >= 0) {
 				ds = geoUtils.distanceBetween(ruta1[r1i], ruta2[r2i - 1]);
 			}
-			if (da <= datos.config.walkingDistance && (ds ? (da < ds) : true)) {
+			let wd = walkDistance? walkDistance : datos.config.walkingDistance
+			if (da <= wd && (ds ? (da < ds) : true)) {
 				//console.log("r1i",r1i,"r2i",r2i,"da",da,"ds",ds);
 				m1.fin.push(r1i);
 				m1.ini.push(r2i);
