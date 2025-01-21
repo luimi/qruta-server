@@ -10,7 +10,7 @@ nearRoutes = async (data, params) => {
   let near = (array, type) => {
     array.forEach((route) => {
       if (geoUtils.isNearRoute(route, params.location, params.area * 500)) {
-        result[type].push({ id: route.id, name: route.name, details: route.details });
+        result[type].push({ id: route.id, name: route.name, details: route.details, company: route.company });
       }
     });
   }
