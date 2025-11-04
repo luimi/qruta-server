@@ -150,6 +150,11 @@ module.exports = {
         }
         return ans;
     },
+    randomNum: (min, max) => {
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    },
     analytics: (city, type, lat, lon) => {
         if (!process.env.ANALYTICS_URL) return;
         const options = {
@@ -168,7 +173,7 @@ module.exports = {
         request
             .post(options)
             .on('error', (e) => {
-                if(Sentry.getCurrentHub().getClient()) {
+                if (Sentry.getCurrentHub().getClient()) {
                     Sentry.captureException(e);
                     Sentry.captureMessage(`${process.env.NAME}-${e.message}`);
                 }
