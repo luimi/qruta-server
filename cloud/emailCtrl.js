@@ -28,6 +28,7 @@ const send = (email) => {
     return new Promise((res, rej) => {
         transporter.sendMail(email, (error, info) => {
             if (error) {
+                console.error(error)
                 res(false)
             } else {
                 res(true)
