@@ -19,7 +19,17 @@ var api = new ParseServer({
   appId: APP_ID,
   masterKey: MASTER_KEY,
   serverURL: SERVER_URL,
-  masterKeyIps: [MASTER_KEY_IP || '0.0.0.0/0']
+  masterKeyIps: [MASTER_KEY_IP || '0.0.0.0/0'],
+  allowClientClassCreation: false,
+  allowExpiredAuthDataToken: false,
+  auth: {
+    google: {
+      enabled: true
+    },
+    apple: {
+      enabled: true
+    }
+  }
 });
 
 app.get('/', (req,res) => res.send({success:true, message:"Q'ruta server is running"}))
