@@ -8,11 +8,12 @@ const load = require('./load');
 const redisCtrl = require('./redisController');
 const imageCtrl = require('./imageController');
 const authCtrl = require('./authCtrl');
+const payment = require('./paymentCtrl');
 const schedule = require('node-schedule');
 const _request = require('request');
 const os = require("os");
 const { version } = require("../package.json");
-const { NAME, SCHEDULE, SERVER_URL, CITIES, APP_ID } = process.env;
+const { NAME, SCHEDULE, SERVER_URL, CITIES, APP_ID, PAYMENT_WEBHOOK } = process.env;
 
 
 let data;
@@ -98,7 +99,7 @@ init = async () => {
   scheduleJob()
 }
 scheduleJob = () => {
-  if(!SCHEDULE) return
+  if (!SCHEDULE) return
   schedule.scheduleJob(SCHEDULE, async () => {
     await setServerStatus("idle");
     process.exit(1)
@@ -163,7 +164,7 @@ Parse.Cloud.define("nearRoutes", async (request) => {
   ], [1, 2, 3, 4]);
   if (result.success) {
     await setServerStatus("busy");
-    utils.analytics(params.city, 'near', utils.cat(params.location[0]),utils.cat(params.location[1]));
+    utils.analytics(params.city, 'near', utils.cat(params.location[0]), utils.cat(params.location[1]));
     let cache = await redisCtrl.getCached(params);
     if (cache) return cache;
     result = await nearRoutes({ data: data, params: params });
@@ -245,3 +246,7 @@ Parse.Cloud.define("getServer", async (request) => {
 Parse.Cloud.define("uploadImage", imageCtrl.upload)
 
 Parse.Cloud.define("sendOTPCode", authCtrl.loginOTP)
+
+Parse.Cloud.define("getPaymentLink", payment.getPaymentLink)
+
+Parse.Cloud.define(PAYMENT_WEBHOOK || 'webhook', payment.getPaymentUpdate)
