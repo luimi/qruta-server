@@ -54,7 +54,7 @@ exports.getPaymentLink = async (request) => {
     return link;
 }
 
-exports.getPaymentUpdate = async () => {
+exports.getPaymentUpdate = async (request) => {
     const { code, transaction, status } = request.params;
     const sub = await new Parse.Query("Subscription").equalTo("code", code).first({ useMasterKey: true });
     const log = sub.get("log");
@@ -64,6 +64,7 @@ exports.getPaymentUpdate = async () => {
         sub.set("status", true)
     }
     await sub.save(null, { useMasterKey: true })
+    return { success: true }
 }
 
 const getLink = async (title, id, price, message) => {
