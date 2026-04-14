@@ -10,7 +10,7 @@ module.exports = {
           cloudinary.v2.uploader.upload(
             request.params.image,{},async (error, result) => {
               if(result){
-                res({success:true, url: result.url});
+                res({success:true, url: result.secure_url});
               } else {
                 res({success:false, message:"Error al intentar guardar la imagen", error:error});
               }
