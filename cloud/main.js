@@ -9,6 +9,7 @@ const redisCtrl = require('./redisController');
 const imageCtrl = require('./imageController');
 const authCtrl = require('./authCtrl');
 const payment = require('./paymentCtrl');
+const menube = require('./menubeCtrl');
 const schedule = require('node-schedule');
 const _request = require('request');
 const os = require("os");
@@ -248,5 +249,7 @@ Parse.Cloud.define("uploadImage", imageCtrl.upload)
 Parse.Cloud.define("sendOTPCode", authCtrl.loginOTP)
 
 Parse.Cloud.define("getPaymentLink", payment.getPaymentLink)
+
+Parse.Cloud.define("getMenubeNearby", menube.getNearby)
 
 Parse.Cloud.define(PAYMENT_WEBHOOK || 'webhook', payment.getPaymentUpdate)
